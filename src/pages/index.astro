@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Shawn Han"
+  description="CMU stats & ML + CS student. Personal portfolio and sports analytics blog."
+>
+  <div class="space-y-6">
+    <h1 class="text-4xl font-semibold tracking-tight">Shawn Han</h1>
+    <p class="text-lg text-gray-500 dark:text-gray-400 leading-relaxed max-w-xl">
+      CMU stats &amp; machine learning + computer science student.
+      I build things at the intersection of data and sports.
+    </p>
+    <div class="flex gap-4 pt-2">
+      <a
+        href="/projects"
+        class="inline-flex items-center px-4 py-2 rounded-lg bg-gray-900 text-white dark:bg-white dark:text-gray-900 text-sm font-medium hover:opacity-80 transition-opacity"
+      >
+        Projects
+      </a>
+      <a
+        href="/blog"
+        class="inline-flex items-center px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+      >
+        Blog
+      </a>
+    </div>
+  </div>
+</BaseLayout>

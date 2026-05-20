@@ -1,0 +1,22 @@
+---
+title: Building an NBA Shot Chart
+description: Interactive visualization of shot locations using React and Canvas, embedded directly in an MDX blog post.
+date: 2026-05-20
+---
+
+import ShotChart from '../../components/ShotChart.jsx';
+
+I built a small interactive shot chart to explore player shooting patterns. The chart renders on a `<canvas>` element inside a React component — and because this site uses MDX, I can embed it directly in this blog post.
+
+## How it works
+
+Each dot represents a shot attempt. Green dots are makes, red are misses. The data is synthetic for now, but swapping in real NBA shot-location data from the NBA stats API is straightforward.
+
+<ShotChart client:load />
+
+## Next steps
+
+- Pull real data from `stats.nba.com` or `nba_api`
+- Add player/season filters
+- Animate shot sequences for a single game
+- Compute heat maps using kernel density estimation

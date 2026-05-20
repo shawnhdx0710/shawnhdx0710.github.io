@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const projects = [
+  {
+    title: 'NBA Shot Chart',
+    description: 'Interactive shot chart visualization built with React and D3, embedded via MDX.',
+    url: '/blog/first-post',
+    tags: ['React', 'D3', 'NBA'],
+  },
+];
+---
+
+<BaseLayout
+  title="Projects — Shawn Han"
+  description="Projects and portfolio work by Shawn Han."
+>
+  <div class="space-y-8">
+    <h1 class="text-3xl font-semibold tracking-tight">Projects</h1>
+    <div class="grid gap-6">
+      {
+        projects.map((p) => (
+          <a
+            href={p.url}
+            class="block p-6 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-600 transition-colors"
+          >
+            <h2 class="text-lg font-medium">{p.title}</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{p.description}</p>
+            <div class="flex gap-2 mt-3">
+              {p.tags.map((t) => (
+                <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                  {t}
+                </span>
+              ))}
+            </div>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</BaseLayout>

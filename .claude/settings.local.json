@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(find /Users/shawnhan -name \"settings.json\" -path \"*claude*\" 2>/dev/null | head -10)",
+      "Read(//Users/shawnhan/**)",
+      "Bash(rm -rf /Users/shawnhan/.npm/_cacache)",
+      "Bash(npm cache *)",
+      "Bash(npm config *)",
+      "Bash(npm create *)",
+      "Bash(mkdir -p /tmp/astro-scaffold)",
+      "Read(//tmp/**)",
+      "Bash(npm install *)",
+      "Bash(npm view *)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:4321/)",
+      "Bash(kill %1)",
+      "Bash(curl -s http://localhost:4321/projects)",
+      "Bash(curl -s http://localhost:4321/blog)",
+      "Bash(curl -s http://localhost:4321/blog/first-post)",
+      "Bash(open *)"
+    ]
+  }
+}
