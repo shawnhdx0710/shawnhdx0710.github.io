@@ -5,7 +5,6 @@ import mdx from '@astrojs/mdx';
 
 export default defineConfig({
   site: 'https://shawnhdx0710.github.io',
-  base: '/MySite',
   vite: {
     plugins: [tailwindcss()],
   },
