@@ -11,8 +11,8 @@ import MosaicBackground from '../components/MosaicBackground.astro';
   fullScreen={true}
   mainClass="!py-0 flex items-center relative"
 >
-  <!-- Mosaic background: upper 50vh, full-width, z-[1], hidden on mobile -->
-  <div class="hidden md:block absolute z-[1] w-[100vw] left-1/2 -translate-x-1/2 top-0 h-[50vh] overflow-hidden">
+  <!-- Mosaic background: upper 50vh, full-width, z-[1], responsive grid -->
+  <div class="absolute z-[1] w-[100vw] left-1/2 -translate-x-1/2 top-0 h-[50vh] overflow-hidden">
     <MosaicBackground />
     <!-- bottom gradient overlay at z-[2] -->
     <div class="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-[2]" style="background: linear-gradient(to bottom, transparent 0%, #faf9f7 90%);" />
@@ -23,7 +23,7 @@ import MosaicBackground from '../components/MosaicBackground.astro';
     <h1 class="font-serif text-5xl md:text-6xl tracking-tight leading-tight text-white font-bold" style="text-shadow: 0 2px 12px rgba(0,0,0,0.5);">
       ALL IN THE GAME.
     </h1>
-    <p class="mt-52 text-lg text-soft-ink leading-relaxed max-w-lg">
+    <p class="mt-56 text-lg text-soft-ink leading-relaxed max-w-lg">
       I'm Shawn Dexuan Han, a student exploring the intersection of statistics, data science, and sports analytics.
     </p>
     <div class="flex gap-3 mt-8">

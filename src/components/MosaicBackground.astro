@@ -1,20 +1,23 @@
 ---
-const COLS = 5;
+const DESKTOP_COLS = 5;
+const MOBILE_COLS = 2;
 const ROWS = 2;
-const TOTAL = COLS * ROWS;
+const TOTAL = DESKTOP_COLS * ROWS; // 10
 
 const tiles = Array.from({ length: TOTAL }, (_, i) => ({
   id: i,
   front: `/images/mosaic/front-${String(i + 1).padStart(2, '0')}.webp`,
   back: `/images/mosaic/back-${String(i + 1).padStart(2, '0')}.webp`,
   delay: (i * 0.7) % 8,
+  // only first 4 tiles visible on mobile (2 cols × 2 rows)
+  mobileHidden: i >= 4,
 }));
 ---
 
 <div class="mosaic-grid">
   {tiles.map((tile) => (
     <div
-      class="mosaic-tile"
+      class={`mosaic-tile${tile.mobileHidden ? ' hidden md:block' : ''}`}
       style={`--delay: ${tile.delay}s;`}
     >
       <div class="mosaic-card">
@@ -34,34 +37,51 @@ const tiles = Array.from({ length: TOTAL }, (_, i) => ({
 <style>
   .mosaic-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(2, 1fr);
     width: 100%;
     height: 100%;
   }
 
+  @media (min-width: 768px) {
+    .mosaic-grid {
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+    }
+  }
+
   .mosaic-tile {
     perspective: 1000px;
-    cursor: pointer;
   }
 
   .mosaic-card {
     position: relative;
     width: 100%;
     height: 100%;
-    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
     transform-style: preserve-3d;
+    will-change: transform;
   }
 
-  /* hover: flip to back */
-  .mosaic-tile:hover .mosaic-card {
-    transform: rotateY(180deg);
-  }
+  /* ── desktop only ── */
+  @media (min-width: 768px) {
+    .mosaic-tile {
+      cursor: pointer;
+    }
 
-  /* autonomous flip — staggered delay per tile */
-  .mosaic-card {
-    animation: autoFlip 20s infinite;
-    animation-delay: var(--delay);
+    .mosaic-card {
+      transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* hover flip */
+    .mosaic-tile:hover .mosaic-card {
+      transform: rotateY(180deg);
+    }
+
+    /* autonomous staggered flips */
+    .mosaic-card {
+      animation: autoFlip 20s infinite;
+      animation-delay: var(--delay);
+    }
   }
 
   @keyframes autoFlip {
