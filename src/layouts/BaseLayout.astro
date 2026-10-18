@@ -18,6 +18,19 @@ interface Props {
 
 const { title, description, coverImageUrl, coverImageWidth, coverImageHeight, showSocialSidebar, hideFooter, fullScreen, mainClass = '' } = Astro.props;
 const baseUrl = Astro.site || Astro.url?.origin;
+
+// Match the actual optimized file extension so og:image:type is not wrong.
+const coverExt = coverImageUrl?.split('?')[0].split('.').pop()?.toLowerCase();
+const coverMimeTypes: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  webp: 'image/webp',
+  avif: 'image/avif',
+  gif: 'image/gif',
+  svg: 'image/svg+xml',
+};
+const coverImageType = coverExt ? coverMimeTypes[coverExt] ?? 'image/png' : undefined;
 ---
 
 <!doctype html>
@@ -40,7 +53,7 @@ const baseUrl = Astro.site || Astro.url?.origin;
         <meta property="og:image" content={new URL(coverImageUrl, baseUrl).href} />
         {coverImageWidth && <meta property="og:image:width" content={String(coverImageWidth)} />}
         {coverImageHeight && <meta property="og:image:height" content={String(coverImageHeight)} />}
-        <meta property="og:image:type" content="image/png" />
+        {coverImageType && <meta property="og:image:type" content={coverImageType} />}
       </>
     )}
     <meta name="twitter:card" content={coverImageUrl ? "summary_large_image" : "summary"} />

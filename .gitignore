@@ -12,6 +12,10 @@ __pycache__/
 venv/
 .venv/
 
+# Local caches / raw downloads (re-fetchable, not source)
+.cache/
+data/
+
 # xT pipeline — data cache & outputs (large, regeneratable)
 sb_cache/
 output/xt_grid_*
