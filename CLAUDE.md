@@ -220,9 +220,9 @@ Edit the `readings` array at the top of `src/pages/readings/index.astro`:
 ### Add a misc item
 
 Misc is hand-written in `src/pages/misc/index.astro` (no card array). Add a `<section>`
-with the same eyebrow/H2/body rhythm, put images in `src/assets/misc/`, and static
-PDF/HTML in `public/misc/`. The book section uses a first-page image plus a collapsible
-`<details>` PDF iframe so the page never shows a blank reader by default.
+with the same H2/body rhythm, put images in `src/assets/misc/`, and static PDF/HTML in
+`public/misc/`. The book section uses a first-page image plus a collapsible `<details>` PDF
+iframe so the page never shows a blank reader by default.
 
 ## Deploy & verification
 
