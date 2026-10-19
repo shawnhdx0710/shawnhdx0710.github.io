@@ -24,7 +24,7 @@ blog, and project write-up layer; it does not contain project source code.
 - **Live:** the dark redesign is deployed and live.
 - **Local toolchain:** Node v24.15.0, npm 11.12.1. `package.json` requires Node >=22.12;
   CI pins Node 22.
-- **Content:** 2 blog posts, 1 published project.
+- **Content:** 2 blog posts, 1 published project, 3 Misc entries.
 - **Design:** the whole site is dark (`#0e1410` page, `#141c16` cards, cream text). The
   homepage is a full-bleed night-pitch canvas behind a centered narrow column of
   left-aligned prose; no visible title and no homepage section grid.
@@ -91,10 +91,11 @@ Deploy is just `git push` to `main`; GitHub Actions does the rest.
 │   │   ├── projects/index.astro    # project listing
 │   │   ├── projects/[...slug].astro# project template
 │   │   ├── readings/index.astro    # reading notes (blank until entries exist)
-│   │   └── misc/index.astro        # miscellaneous (blank until entries exist)
+│   │   └── misc/index.astro        # editorial misc page: film, book, archive links
 │   └── styles/global.css           # Tailwind v4 theme + article typography
 ├── public/
-│   └── projects/xtgrid/            # xt_voxel_terrain.html (tracked, 5.2 MB)
+│   ├── projects/xtgrid/            # xt_voxel_terrain.html (tracked, 5.2 MB)
+│   └── misc/                       # book PDF + HTML edition
 ├── .github/workflows/deploy.yml    # CI: npm ci → build → Pages
 ├── astro.config.mjs                # site URL + integrations (github-dark Shiki)
 ├── package.json, tsconfig.json
@@ -131,8 +132,12 @@ Old `/blog/...` URLs are kept as meta-refresh redirects in `src/pages/blog/`.
   `font-weight: 500`, and left-aligned social icons. No visible title or section grid.
 - **Listings** (`blogs/index.astro`, `projects/index.astro`) sort newest-first and render
   dark cards with cover, date, title, description, tags.
-- **Readings / Misc** use the same `font-serif text-4xl` H1 + description scale as
-  Blogs/Projects. Their data arrays are empty; empty pages show only the header.
+- **Readings** uses the same `font-serif text-4xl` H1 + description scale as
+  Blogs/Projects; its data array is empty, so the page shows only the header.
+- **Misc** is deliberately **not** a card grid. It is a hand-written editorial page with
+  three sections: *Offside Dreams* (documentary), *From Colonials to Collapse* (book with
+  first-page preview + expandable in-page PDF reader), and the RSSSF/cfadata archive
+  links. Images live in `src/assets/misc/`; the book PDF/HTML live in `public/misc/`.
 - **Post pages** render a back link, title, date, cover, MDX content, and social sidebar.
   Blog and project templates are near-copies — change them together.
 
@@ -214,7 +219,10 @@ Edit the `readings` array at the top of `src/pages/readings/index.astro`:
 
 ### Add a misc item
 
-Edit `items` in `src/pages/misc/index.astro`: `{ title, date, description, link? }`.
+Misc is hand-written in `src/pages/misc/index.astro` (no card array). Add a `<section>`
+with the same eyebrow/H2/body rhythm, put images in `src/assets/misc/`, and static
+PDF/HTML in `public/misc/`. The book section uses a first-page image plus a collapsible
+`<details>` PDF iframe so the page never shows a blank reader by default.
 
 ## Deploy & verification
 
