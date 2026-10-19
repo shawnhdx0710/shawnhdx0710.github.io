@@ -3,23 +3,6 @@ dist
 .DS_Store
 .astro
 
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.egg-info/
-.ipynb_checkpoints/
-venv/
-.venv/
-
-# Local caches / raw downloads (re-fetchable, not source)
-.cache/
-data/
+# Local preview artifacts
 .preview/
 .chrome-*/
-
-# xT pipeline — data cache & outputs (large, regeneratable)
-sb_cache/
-output/xt_grid_*
-output/xt_heatmap_*
-output/xt_voxel_terrain*
