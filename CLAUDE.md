@@ -136,8 +136,8 @@ Old `/blog/...` URLs are kept as meta-refresh redirects in `src/pages/blog/`.
   Blogs/Projects; its data array is empty, so the page shows only the header.
 - **Misc** is deliberately **not** a card grid. It is a hand-written editorial page with
   three sections: *Offside Dreams* (documentary), *From Colonials to Collapse* (book with
-  first-page preview + expandable in-page PDF reader), and the RSSSF/cfadata archive
-  links. Images live in `src/assets/misc/`; the book PDF/HTML live in `public/misc/`.
+  PDF/HTML buttons), and RSSSF/cfadata inline links. Images live in `src/assets/misc/`;
+  the book PDF/HTML live in `public/misc/`.
 - **Post pages** render a back link, title, date, cover, MDX content, and social sidebar.
   Blog and project templates are near-copies — change them together.
 
@@ -221,8 +221,8 @@ Edit the `readings` array at the top of `src/pages/readings/index.astro`:
 
 Misc is hand-written in `src/pages/misc/index.astro` (no card array). Add a `<section>`
 with the same H2/body rhythm, put images in `src/assets/misc/`, and static PDF/HTML in
-`public/misc/`. The book section uses a first-page image plus a collapsible `<details>` PDF
-iframe so the page never shows a blank reader by default.
+`public/misc/`. Keep secondary links inline in the prose rather than adding chips or
+preview panels; the book section only needs PDF/HTML buttons.
 
 ## Deploy & verification
 
