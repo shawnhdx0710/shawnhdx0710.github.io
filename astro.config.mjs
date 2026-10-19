@@ -10,6 +10,6 @@ export default defineConfig({
   },
   integrations: [react(), mdx({
     syntaxHighlight: 'shiki',
-    shikiConfig: { theme: 'github-light' },
+    shikiConfig: { theme: 'github-dark' },
   })],
 });

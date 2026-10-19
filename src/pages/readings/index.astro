@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+type Reading = {
+  title: string;
+  authors: string;
+  year: string;
+  link: string;
+  note: string;
+};
+
+// Add entries here as I finish them. Keep the note to one or two sentences.
+const readings: Reading[] = [];
+---
+
+<BaseLayout
+  title="Readings — Shawn Han"
+  description="Papers, books, and essays Shawn Han is reading, with short notes."
+>
+  <div class="mb-10">
+    <h1 class="font-serif text-4xl font-semibold tracking-tight">Readings</h1>
+    <p class="mt-2 text-soft-ink">
+      Papers, books, and essays I'm reading, with short notes.
+    </p>
+  </div>
+
+  {
+    readings.length > 0 && (
+      <ul class="divide-y divide-white/10 border-t border-white/10">
+        {readings.map((reading) => (
+          <li class="py-7">
+            <a
+              href={reading.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-serif text-xl font-medium text-ink underline decoration-white/20 underline-offset-4 transition-colors hover:text-accent"
+            >
+              {reading.title}
+            </a>
+            <p class="mt-1.5 text-xs uppercase tracking-wide text-soft-ink">
+              {reading.authors} · {reading.year}
+            </p>
+            <p class="mt-3 text-sm leading-relaxed text-soft-ink">{reading.note}</p>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</BaseLayout>

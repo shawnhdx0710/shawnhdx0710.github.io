@@ -11,28 +11,33 @@ portfolio/blog and a lab notebook for Python soccer-analytics projects.
 - **Live:** https://shawnhdx0710.github.io/
 - **Repo:** https://github.com/shawnhdx0710/shawnhdx0710.github.io
 - **Deploy:** push to `main` → GitHub Actions → GitHub Pages (no PR previews)
-- **Author:** Shawn Dexuan Han — StatsML @ Carnegie Mellon University
+- **Author:** Shawn (Dexuan) Han — 韩德轩, freshman studying statistics, machine learning,
+  and artificial intelligence at Carnegie Mellon University
 
 ## Snapshot (as of 2026-10-18)
 
-- **Git:** the 2026-10-18 fixes are committed locally on `main` (**1 commit ahead of
-  `origin/main`, not pushed**). Working tree only has the pre-existing
-  `.claude/settings.local.json` modification. `CLAUDE.md` is now tracked; `.cache/`,
-  `data/`, `.venv/` are gitignored.
-- **Build:** `npm run build` passes — 6 pages, ~2 s. Last CI deploy succeeded (2026-08-16).
-- **Live:** homepage, `/blog/`, `/projects/`, both posts, the project page, and the
-  interactive HTML all return 200.
+- **Git:** the redesign is committed locally on `main`; the branch is **2 commits ahead
+  of `origin/main`, not pushed** (`b8b498d` fixes + the redesign commit). The only
+  remaining working-tree change is the pre-existing `.claude/settings.local.json`.
+- **Build:** `npm run build` passes — 11 pages (8 content + 3 legacy `/blog/` redirects),
+  ~2 s. Last CI deploy succeeded (2026-08-16).
+- **Live:** the old design is still live; none of the redesign is pushed.
 - **Local toolchain:** Node v24.15.0, npm 11.12.1. `package.json` requires Node >=22.12;
   CI pins Node 22.
 - **Python:** use the repo-local `.venv` (created 2026-10-18) — `.venv/bin/python
   scripts/...` works. The global `python3` is still broken (NumPy 2 vs PyArrow ABI), so
   always use the venv. See Known Issues #1.
-- **Content:** 2 blog posts, 1 project.
+- **Content:** 2 blog posts, 1 published project. Two more projects are planned but
+  **not on the site yet** — see Planned projects.
+- **Design:** the **whole site is dark** now (`#0e1410` page, `#141c16` cards, cream
+  text). The homepage is a full-bleed night-pitch animation behind a centered narrow
+  column of **left-aligned** prose; no visible title and no homepage section grid. Inner
+  pages share the same dark header/footer and page-title scale. The old mosaic is gone.
 
 | Type | Source | Date | Tags | Live URL |
 |------|--------|------|------|----------|
-| Blog | `blogs/maradona-1986` | 2026-06-11 | Soccer Analytics, Event data, Visualization | `/blog/maradona-1986/maradona-1986/` |
-| Blog | `blogs/event-datasets` | 2026-07-31 (updated 2026-08-09) | Open Data, Soccer Analytics | `/blog/event-datasets/event-datasets/` |
+| Blog | `blogs/maradona-1986` | 2026-06-11 | Soccer Analytics, Event data, Visualization | `/blogs/maradona-1986/maradona-1986/` |
+| Blog | `blogs/event-datasets` | 2026-07-31 (updated 2026-08-09) | Open Data, Soccer Analytics | `/blogs/event-datasets/event-datasets/` |
 | Project | `projects/xTgrid` | 2026-06-20 | Soccer Analytics, Data Engineering, xT, Python | `/projects/xtgrid/xtgrid/` |
 
 The **event-datasets** post is a "living document" — update its `Last updated:` line
@@ -68,10 +73,10 @@ python3 -m venv .venv                     # one-time setup
 /
 ├── src/
 │   ├── components/
-│   │   ├── Header.astro            # sticky nav: Home / Projects / Blog
-│   │   ├── Footer.astro            # school + copyright
-│   │   ├── MosaicBackground.astro  # pure-CSS 5×2 flip grid (2×2 on mobile)
-│   │   └── SocialIcons.astro       # inline SVG: Instagram, X, LinkedIn
+│   │   ├── Header.astro            # sticky nav: Projects / Blogs / Readings / Misc
+│   │   ├── Footer.astro            # name + copyright only
+│   │   ├── FootballBackground.astro# fixed canvas passing-network animation
+│   │   └── SocialIcons.astro       # inline SVG: Instagram, X, LinkedIn, GitHub, Gmail, CMU
 │   ├── content/
 │   │   ├── blogs/
 │   │   │   ├── maradona-1986/      # .mdx + charts + notebook (dev reference)
@@ -81,14 +86,17 @@ python3 -m venv .venv                     # one-time setup
 │   ├── content.config.ts           # collections: blog, projects (glob loader)
 │   ├── layouts/BaseLayout.astro    # head/OG, header, footer, social sidebar
 │   ├── pages/
-│   │   ├── index.astro             # homepage: mosaic + headline + CTA
-│   │   ├── blog/index.astro        # post listing
-│   │   ├── blog/[...slug].astro    # post template
+│   │   ├── index.astro             # homepage: dark football canvas + intro
+│   │   ├── blogs/index.astro        # post listing
+│   │   ├── blogs/[...slug].astro    # post template
+│   │   ├── blog/index.astro         # legacy redirect → /blogs/
+│   │   ├── blog/[...slug].astro     # legacy redirect → /blogs/<id>/
 │   │   ├── projects/index.astro    # project listing
-│   │   └── projects/[...slug].astro# project template
+│   │   ├── projects/[...slug].astro# project template
+│   │   ├── readings/index.astro    # reading notes (blank until entries exist)
+│   │   └── misc/index.astro        # miscellaneous (blank until entries exist)
 │   └── styles/global.css           # Tailwind v4 theme + article typography
 ├── public/
-│   ├── images/mosaic/              # front-01..10.webp, back-01..10.webp
 │   └── projects/xtgrid/            # xt_voxel_terrain.html (tracked, 5.2 MB)
 ├── scripts/                        # xT pipeline (01..05) + xt_utils.py
 ├── sb_cache/spadl_parquet/         # 3,927 cached Parquets, ~210 MB (gitignored)
@@ -121,8 +129,8 @@ filename*, and they are **lowercased**. This produces the site's URL shape:
 
 | File | ID | URL |
 |------|----|-----|
-| `blogs/event-datasets/event-datasets.mdx` | `event-datasets/event-datasets` | `/blog/event-datasets/event-datasets/` |
-| `blogs/maradona-1986/maradona-1986.mdx` | `maradona-1986/maradona-1986` | `/blog/maradona-1986/maradona-1986/` |
+| `blogs/event-datasets/event-datasets.mdx` | `event-datasets/event-datasets` | `/blogs/event-datasets/event-datasets/` |
+| `blogs/maradona-1986/maradona-1986.mdx` | `maradona-1986/maradona-1986` | `/blogs/maradona-1986/maradona-1986/` |
 | `projects/xTgrid/xTgrid.mdx` | `xtgrid/xtgrid` | `/projects/xtgrid/xtgrid/` |
 
 So blog/project URLs contain a **doubled segment**, and uppercase directory names are
@@ -131,15 +139,53 @@ depend on it. Changing it would require redirects.
 
 ### Pages
 
-- **Homepage** (`index.astro`) uses `fullScreen` + `hideFooter`. The mosaic is absolutely
-  positioned over the top 50vh with a gradient fade to cream; the headline
-  "ALL IN THE GAME." sits over it in white with a text shadow. Below: intro paragraph,
-  Blog/Projects pills, horizontal social icons.
-- **Listings** (`blog/index.astro`, `projects/index.astro`) call `getCollection`, sort
-  newest-first, and render cards with cover, date, title, description, tags.
+- **Homepage** (`index.astro`) uses `hideFooter` and a full-height `mainClass`. The fixed
+  `FootballBackground` canvas sits at z-0; a **centered narrow column** (`max-w-2xl`) with
+  **left-aligned prose** sits at z-10. It has a visually hidden `<h1>`, three intro
+  paragraphs at `font-weight: 500`, and left-aligned social icons below. There is no
+  visible headline or section grid — the top nav handles navigation.
+- **Listings** (`blogs/index.astro`, `projects/index.astro`) call `getCollection`, sort
+  newest-first, and render dark cards with cover, date, title, description, tags. The
+  label, H1, and route are all **Blogs** (`/blogs/`). Old `/blog/...` URLs are kept as
+  meta-refresh redirects to `/blogs/...`.
+- **Readings / Misc** (`readings/index.astro`, `misc/index.astro`) use the **same**
+  `font-serif text-4xl` H1 + `mt-2 text-soft-ink` description scale as Blogs/Projects.
+  Their data arrays are empty; an empty page renders only the header and description —
+  no empty-state card or copy.
 - **Post pages** (`*/[...slug].astro`) render a back link, title, date, cover image, MDX
   content, and `showSocialSidebar`. Both templates are nearly identical copies — change
   them together.
+
+### Homepage background
+
+`FootballBackground.astro` is a **fixed, full-viewport canvas** (z-0,
+`pointer-events: none`) with no framework or dependency. It draws:
+
+- a full-bleed dark surface (horizontal layout on desktop, **portrait** below 720px) with
+  mowing stripes, a halfway line, a center circle, and penalty spots. There is **no outer
+  pitch border** — the markings run off every edge so the screen never looks framed;
+- **standard pitch markings at both ends**: goals (mouth line + posts only, no third
+  box), goal areas, penalty areas, penalty spots, and the penalty "D" — **no net grid**.
+  Box depth is derived from its width so the 40.32:16.5 (penalty) and 18.32:5.5 (goal
+  area) proportions stay correct even when the full-bleed pitch is stretched. Left/right
+  on desktop; top/bottom on portrait, with the top goal kept below the header;
+- two 11-player formations (cream vs blue) that **continuously float** with a visible
+  drift (no shirt numbers; desktop and mobile are both simple dots);
+- passing lines between nearby teammates, with small **data packets** moving along every
+  other lane; the ball travels node-to-node on a curved path with a **glowing trail** and
+  a dashed blue pass arc;
+- arrival/pass **pulse rings**, pulsing player halos, a rotating **radar sweep** (wedge +
+  arc) on the centre circle, a dashed rotating outer ring, and a slow **ambient flow** of
+  small particles drifting across the pitch;
+- a breathing blue floodlight glow from the centre;
+- a soft dark halo behind the intro copy (not a box) so the text stays legible without
+  breaking the full-bleed feel.
+
+The mouse repels nearby players within 130px. `prefers-reduced-motion` renders one
+static frame; the animation also pauses when the tab is hidden. Keep the canvas at z-0
+and the homepage content above it; don't wrap it in a `relative` container with a
+background or it will be covered. The old mosaic component and its 20 images were
+deleted on 2026-10-18 — do not reintroduce `MosaicBackground.astro`.
 
 ### BaseLayout props
 
@@ -149,31 +195,34 @@ depend on it. Changing it would require redirects.
 - `coverImageUrl` / `coverImageWidth` / `coverImageHeight` — OG image meta
 - `showSocialSidebar` — floating vertical social icons (post pages)
 - `hideFooter` — homepage
-- `fullScreen` — `h-screen overflow-hidden` body (homepage)
-- `mainClass` — appended to `<main>` classes
+- `fullScreen` — `h-screen overflow-hidden` body (available, currently unused)
+- `mainClass` — replaces the default `<main>` classes (default:
+  `max-w-3xl mx-auto px-6 py-12`)
 
 It also sets `og:title`, `og:description`, `og:type=article`, and a `twitter:card` that
 switches between `summary_large_image` and `summary` based on cover presence.
 
-### Homepage mosaic
+### Social icons
 
-`MosaicBackground.astro` uses **zero JavaScript**: static HTML + CSS 3D transforms.
-Autonomous flip every 20 s (staggered via `--delay`) plus `:hover` flip on desktop.
-Grid constants: `DESKTOP_COLS = 5`, `MOBILE_COLS = 2`, `ROWS = 2`; tiles 1–4 are the only
-ones visible on mobile.
+`SocialIcons.astro` renders inline SVGs from one `links` array: Instagram, X, LinkedIn,
+GitHub, and **two email icons** — a Gmail "M" for `shawnhdx0710@gmail.com` and a
+graduation cap for `dexuanh@andrew.cmu.edu`. Each is its own `mailto:` link. The
+component is used horizontally on the homepage and vertically in the post sidebar. The
+footer is name + copyright only — the old "StatsML @ Carnegie Mellon University" line was
+removed.
 
 ### Theme & typography
 
 Tailwind v4 via `@tailwindcss/vite`; tokens in `global.css`:
 
 ```css
---color-cream: #faf9f7;     /* page background */
---color-warm-white: #f5f1eb;
---color-ink: #1a1a1a;       /* main text */
---color-soft-ink: #555555;  /* secondary text */
---color-accent: #2563eb;    /* links */
---color-accent-warm: #d97706;
---color-border: #e5e0d8;
+--color-cream: #0e1410;       /* page background (dark moss) */
+--color-warm-white: #141c16;  /* card surface */
+--color-ink: #f2efe7;         /* main text */
+--color-soft-ink: #a7b0a7;    /* secondary text */
+--color-accent: #8ab4ff;      /* links */
+--color-accent-warm: #e0a45e;
+--color-border: rgba(242,239,231,0.12);
 --font-sans: 'Inter';
 --font-serif: 'Newsreader';
 --font-mono: 'JetBrains Mono';
@@ -182,6 +231,12 @@ Tailwind v4 via `@tailwindcss/vite`; tokens in `global.css`:
 Fonts load from Google Fonts in `BaseLayout`. Article typography lives in `global.css`
 (`article h2` is centered; tables are borderless with wide first column). Scoped
 `<style>` in `.astro` files only applies to that component.
+
+**The whole site is dark.** `html` sets `color-scheme: dark`; `body` uses `bg-cream` /
+`text-ink` from the tokens above. Cards use `bg-warm-white` + `border-white/10`; article
+text is `#d6ddd5`; Shiki uses `github-dark`; the theme color is `#0e1410`. The token
+names are historical — `--color-cream` now holds the **dark** page background, so don't
+assume the name is literal.
 
 ## Content workflows
 
@@ -202,7 +257,7 @@ Fonts load from Google Fonts in `BaseLayout`. Article typography lives in `globa
 
 3. Put images in the same directory and reference them as `./filename.ext` (Astro
    optimizes and fingerprints them).
-4. It auto-appears on `/blog/` and at `/blog/<slug>/<slug>/`. No registration needed.
+4. It auto-appears on `/blogs/` and at `/blogs/<slug>/<slug>/`. No registration needed.
 
 ### Add a project
 
@@ -220,14 +275,47 @@ Static HTML that Astro should not process goes in `public/`. Current example:
 When regenerating from `scripts/05_voxel_terrain_plotly.py`, copy
 `output/xt_voxel_terrain.html` over the copy in `public/projects/xtgrid/`.
 
-### Update mosaic images
+### Add a reading
 
-1. Put images in `public/images/mosaic/`.
-2. Naming: `front-01.webp` … `front-10.webp` and `back-01.webp` … `back-10.webp`
-   (pairs must both exist).
-3. Front = sports photos, back = data visualizations.
-4. Tiles 1–4 show on mobile; all 10 on desktop. Grid size is set by the constants in
-   `MosaicBackground.astro`.
+Edit the `readings` array at the top of `src/pages/readings/index.astro`:
+
+```ts
+{ title, authors, year, link, note }
+```
+
+The page renders the list automatically. When the array is empty the page shows only the
+header/description — no placeholder card or empty-state copy.
+
+### Add a misc item
+
+Same pattern in `src/pages/misc/index.astro`:
+
+```ts
+{ title, date, description, link? }
+```
+
+`link` is optional; omit it for notes that live only on the page.
+
+## Planned projects (not published)
+
+Two projects are queued but deliberately **not** on the site as of 2026-10-18. Do not
+create public project pages for them until Shawn says the write-up is ready.
+
+1. **2023 FIFA Women's World Cup — xT & Weighted PageRank**
+   - Local path: `/Users/shawnhan/Desktop/Analytics/2023_WWC_xT_WPR`
+   - Paper: *Using a Weighted PageRank Algorithm on Passing Networks to Identify the
+     Players Most Central to Their Teams' Passing Networks in the 2023 FIFA Women's World
+     Cup* (Dexuan Han; advisor Tim Chartier). **Accepted by SIURO.**
+   - Assets: `SIURO/Dexuan_Han_SIURO_revised.pdf`, figures (`fig_xt2d.png`, `fig_xt3d.png`,
+     `fig_scatter.png`, `fig_workflow.png`), and `Results/player_rankings_*.csv` /
+     `Results/all_matches_wpr_combined.csv`.
+   - Site plan: project page with paper link and figures; do not publish raw data/code
+     unless Shawn decides to.
+2. **StatsBomb Passmap Explorer (15-112 hw7)**
+   - Local path: `/Users/shawnhan/Desktop/15112/hw/hw7_dexuanh`
+   - Python `cmu_graphics` visualizer for the 2022 World Cup final
+     (StatsBomb match `3869685`): `main.py`, `3869685.json`, and a demo video link.
+   - Status: course assignment; Shawn plans to extend/upgrade it before publishing.
 
 ## xT pipeline (`scripts/`)
 
@@ -263,7 +351,8 @@ End-to-end Expected Threat grid trained from StatsBomb Open Data on an M1 MacBoo
 After pushing, wait ~1 minute, then verify the real URLs (the Pages API can lag):
 
 ```bash
-for u in / /blog/ /projects/ /blog/event-datasets/event-datasets/ \
+for u in / /blogs/ /projects/ /readings/ /misc/ \
+         /blogs/event-datasets/event-datasets/ \
          /projects/xtgrid/xtgrid/ /projects/xtgrid/xt_voxel_terrain.html; do
   curl -s -o /dev/null -w "%{http_code} $u\n" "https://shawnhdx0710.github.io$u"
 done
@@ -283,7 +372,8 @@ done
    both are real and both had to be fixed.
 2. **URL shape is slugified and doubled.** IDs include the `.mdx` basename and are
    lowercased. Don't rename content directories casually; live URLs and OG tags point at
-   them.
+   them. Old `/blog/...` URLs are intentionally kept as meta-refresh redirects in
+   `src/pages/blog/` — do not delete them.
 3. **`data/1986-wc/3750191.json` was restored on 2026-10-18** to a valid, complete
    2,748-event copy (2.3 MB). It is an offline convenience only: the notebook fetches all
    three matches live from the StatsBomb GitHub repo (`3750191`, `3889148`, `3889149`), so
@@ -311,6 +401,8 @@ done
 - Always run `npm run build` before declaring a change done. Use `npm run dev` to preview.
 - Keep published URLs stable; check the built routes in `dist/` when unsure.
 - Site copy is English; conversation is Chinese.
+- Format content dates with `timeZone: 'UTC'` in `toLocaleDateString`; otherwise a
+  UTC-midnight YAML date (e.g. `2026-07-31`) renders as the previous day in US zones.
 - Don't reformat or "clean up" unrelated files — the repo is intentionally a bit messy.
 - Generated artifacts (`dist/`, `sb_cache/`, `output/`, `.cache/`) stay out of git.
 - Keep this file current: update the snapshot/table when content or structure changes.
@@ -320,14 +412,23 @@ done
 - CMU StatsML student building a sports-analytics portfolio.
 - Prefers to preview locally (`npm run dev` → `localhost:4321`) before pushing.
 - Edits `.mdx` directly in VS Code — no CMS.
-- Clean, minimal design: Newsreader for headings, Inter for body, cream/ink palette.
-- Social: Instagram, X, LinkedIn (inline SVGs, no icon library).
+- Clean, minimal design: Newsreader for headings, Inter for body. The whole site is dark;
+  the homepage is a dark, full-bleed night-pitch treatment with a centered narrow column
+  of **left-aligned** prose.
+- About Shawn: from Shanghai; plays soccer and basketball; enjoys sports analytics,
+  collecting jerseys and 1:64 car models, cooking, and the humanities.
+- Design reference: [nathanchen.me](https://nathanchen.me/) — centered, quiet, serif-led,
+  with a subtle full-screen animation behind the content. Shawn wants a football version
+  of that feel, not a generic particle field: dark, edge-to-edge, no visible pitch
+  boundary, and no homepage section grid.
+- Social: Instagram, X, LinkedIn, GitHub, Gmail, and CMU email (inline SVGs, no icon
+  library). The two email icons use the Gmail mark and a graduation cap.
 - Long-form writing values concrete numbers, tables, and reproducible pipelines.
 
 ## Possible housekeeping (not done — ask first)
 
-- `main` is 1 commit ahead of `origin/main` (fixes + this file). Push when ready; pushing
-  triggers a deploy, but the site output is unchanged by these fixes.
+- `main` is 2 commits ahead of `origin/main` (fixes + redesign), **not pushed**. Push when
+  Shawn is ready to deploy.
 - `.claude/settings.local.json` was already modified before this session; leave it alone
   unless you want Claude Code's local permissions versioned.
 - Optionally flatten the doubled URLs via a custom `generateId` + redirects (would change

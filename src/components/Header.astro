@@ -1,8 +1,9 @@
 ---
 const nav = [
-  { href: '/', label: 'Home' },
   { href: '/projects', label: 'Projects' },
-  { href: '/blog', label: 'Blog' },
+  { href: '/blogs', label: 'Blogs' },
+  { href: '/readings', label: 'Readings' },
+  { href: '/misc', label: 'Misc' },
 ];
 
 const currentPath = Astro.url.pathname;
@@ -10,24 +11,36 @@ const isActive = (href: string) =>
   href === '/' ? currentPath === '/' : currentPath.startsWith(href);
 ---
 
-<header class="border-b border-gray-200/60 bg-cream/80 backdrop-blur-sm sticky top-0 z-10">
-  <nav class="max-w-3xl mx-auto px-6 py-5 flex items-center justify-between">
-    <a href="/" class="font-serif text-xl font-semibold tracking-tight hover:opacity-70 transition-opacity">
+<header class="sticky top-0 z-20 border-b border-white/5 bg-cream/80 backdrop-blur-md">
+  <nav
+    class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-y-3 px-6 py-4 sm:py-5"
+  >
+    <a
+      href="/"
+      class="font-serif text-xl font-semibold tracking-tight text-ink transition-opacity hover:opacity-70 sm:text-2xl"
+      aria-current={currentPath === '/' ? 'page' : undefined}
+    >
       Shawn Han
     </a>
-    <div class="flex items-center gap-8">
-      {nav.map(({ href, label }) => (
-        <a
-          href={href}
-          class={`text-sm tracking-wide uppercase transition-colors hover:text-ink ${
-            isActive(href)
-              ? 'text-ink font-medium'
-              : 'text-soft-ink'
-          }`}
-        >
-          {label}
-        </a>
-      ))}
+
+    <div
+      class="flex w-full items-center justify-center gap-6 sm:w-auto sm:justify-end sm:gap-9"
+    >
+      {
+        nav.map(({ href, label }) => (
+          <a
+            href={href}
+            aria-current={isActive(href) ? 'page' : undefined}
+            class={`text-[11px] uppercase tracking-[0.12em] transition-colors sm:text-xs md:text-sm ${
+              isActive(href)
+                ? 'font-medium text-ink'
+                : 'text-soft-ink hover:text-ink'
+            }`}
+          >
+            {label}
+          </a>
+        ))
+      }
     </div>
   </nav>
 </header>

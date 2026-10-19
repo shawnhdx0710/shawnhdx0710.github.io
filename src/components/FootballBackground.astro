@@ -1,0 +1,641 @@
+---
+// Full-bleed night-pitch animation: grass stripes, pitch markings, two
+// passing networks, and a ball moving between players. Pure canvas.
+---
+
+<canvas id="football-canvas" aria-hidden="true"></canvas>
+
+<style>
+  #football-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  (() => {
+    const canvas = document.getElementById('football-canvas');
+    if (!(canvas instanceof HTMLCanvasElement)) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const CREAM = '245, 241, 235';
+    const BLUE = '96, 165, 250';
+    const DARK = '14, 20, 16';
+    const TEAM_COLORS = [CREAM, BLUE];
+
+    let width = 0;
+    let height = 0;
+    let dpr = 1;
+    let players = [];
+    let flow = [];
+    let pulses = [];
+    let trail = [];
+    let raf = 0;
+    let lastTime = 0;
+    const mouse = { x: -9999, y: -9999 };
+
+    const ball = {
+      from: 0,
+      to: 5,
+      elapsed: 0,
+      duration: 900,
+      hold: 0,
+    };
+
+    const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+    const easeInOut = (t) =>
+      t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    const isPortrait = () => width < 720;
+
+    // 4-3-3 (cream) vs 4-2-3-1 (blue), normalized across the whole screen.
+    const FORMATIONS = [
+      [
+        [0.06, 0.50],
+        [0.18, 0.18], [0.16, 0.38], [0.16, 0.62], [0.18, 0.82],
+        [0.32, 0.28], [0.30, 0.50], [0.32, 0.72],
+        [0.44, 0.20], [0.46, 0.50], [0.44, 0.80],
+      ],
+      [
+        [0.94, 0.50],
+        [0.82, 0.18], [0.84, 0.38], [0.84, 0.62], [0.82, 0.82],
+        [0.68, 0.36], [0.68, 0.64],
+        [0.56, 0.20], [0.54, 0.50], [0.56, 0.80],
+        [0.48, 0.34],
+      ],
+    ];
+
+    function layoutPlayers() {
+      const portrait = isPortrait();
+      const padX = width * (portrait ? 0.12 : 0.07);
+      const padY = height * (portrait ? 0.10 : 0.13);
+      const fw = width - padX * 2;
+      const fh = height - padY * 2;
+      const next = [];
+
+      FORMATIONS.forEach((formation, team) => {
+        formation.forEach(([nx, ny]) => {
+          const bx = portrait ? padX + ny * fw : padX + nx * fw;
+          const by = portrait ? padY + nx * fh : padY + ny * fh;
+          next.push({
+            x: bx,
+            y: by,
+            bx,
+            by,
+            team,
+            phase: Math.random() * Math.PI * 2,
+            amp: 7 + Math.random() * 9,
+            speed: 0.22 + Math.random() * 0.28,
+          });
+        });
+      });
+
+      players = next;
+    }
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      layoutPlayers();
+      flow = Array.from({ length: width < 720 ? 24 : 42 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.55,
+        vy: (Math.random() - 0.5) * 0.55,
+        size: 0.7 + Math.random() * 1.3,
+        color: Math.random() < 0.45 ? BLUE : CREAM,
+      }));
+      pulses = [];
+      trail = [];
+      if (reducedMotion) draw(0);
+    }
+
+    function drawField(now = performance.now()) {
+      const portrait = isPortrait();
+      const bands = portrait ? 14 : 12;
+
+      // Full-bleed mowing stripes: no pitch border, just a continuous surface.
+      for (let i = 0; i < bands; i += 2) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+        if (portrait) {
+          ctx.fillRect(0, (i * height) / bands, width, height / bands);
+        } else {
+          ctx.fillRect((i * width) / bands, 0, width / bands, height);
+        }
+      }
+
+      // A soft cool wash from the centre, slowly breathing like floodlights.
+      const breathe = 0.04 + 0.012 * Math.sin(now * 0.0006);
+      const glow = ctx.createRadialGradient(
+        width / 2, height / 2, 0,
+        width / 2, height / 2, Math.max(width, height) * 0.75
+      );
+      glow.addColorStop(0, `rgba(96, 165, 250, ${breathe})`);
+      glow.addColorStop(1, 'rgba(8, 10, 8, 0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = `rgba(${CREAM}, 0.14)`;
+      ctx.lineWidth = 1;
+
+      const cx = width / 2;
+      const fieldTop = portrait ? 92 : 0;
+      const fieldBottom = portrait ? height - 16 : height;
+      const cy = (fieldTop + fieldBottom) / 2;
+      const fieldWidth = portrait ? width : height;
+      const centerR = Math.min(width, height) * (portrait ? 0.24 : 0.18);
+
+      const line = (x1, y1, x2, y2) => {
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      };
+
+      const circle = (x, y, r) => {
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.stroke();
+      };
+
+      if (portrait) {
+        line(0, cy, width, cy);
+        circle(cx, cy, centerR);
+      } else {
+        line(cx, 0, cx, height);
+        circle(cx, cy, centerR);
+      }
+
+      // Penalty areas, goal areas, goals, spots, and the D — modelled on a
+      // standard top-down pitch diagram, with no net grid. Box depth is derived
+      // from its width so the 40.32:16.5 (and 18.32:5.5) shape stays correct
+      // even when the full-bleed pitch is stretched by the viewport.
+      const paWidth = fieldWidth * 0.59;
+      const paDepth = paWidth * (16.5 / 40.32);
+      const gaWidth = fieldWidth * 0.269;
+      const gaDepth = gaWidth * (5.5 / 18.32);
+      const goalWidth = fieldWidth * 0.108;
+      const spotDist = paDepth * (11 / 16.5);
+      const arcR = fieldWidth * (9.15 / 68);
+      const arcTheta = Math.acos(clamp((paDepth - spotDist) / arcR, -1, 1));
+
+      ctx.strokeStyle = `rgba(${CREAM}, 0.14)`;
+      ctx.lineWidth = 1;
+
+      if (portrait) {
+        for (const top of [true, false]) {
+          const base = top ? fieldTop : fieldBottom;
+          const dir = top ? 1 : -1;
+          ctx.strokeRect(
+            cx - paWidth / 2,
+            top ? base : base - paDepth,
+            paWidth,
+            paDepth
+          );
+          ctx.strokeRect(
+            cx - gaWidth / 2,
+            top ? base : base - gaDepth,
+            gaWidth,
+            gaDepth
+          );
+
+          // Goal is just the mouth on the end line — no third box.
+          ctx.save();
+          ctx.strokeStyle = `rgba(${CREAM}, 0.78)`;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(cx - goalWidth / 2, base);
+          ctx.lineTo(cx + goalWidth / 2, base);
+          ctx.stroke();
+          ctx.fillStyle = `rgba(${CREAM}, 0.7)`;
+          for (const gx of [cx - goalWidth / 2, cx + goalWidth / 2]) {
+            ctx.beginPath();
+            ctx.arc(gx, base, 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+
+          ctx.fillStyle = `rgba(${CREAM}, 0.30)`;
+          ctx.beginPath();
+          ctx.arc(cx, base + dir * spotDist, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = `rgba(${CREAM}, 0.12)`;
+          ctx.beginPath();
+          ctx.arc(
+            cx,
+            base + dir * spotDist,
+            arcR,
+            dir > 0 ? Math.PI / 2 - arcTheta : -Math.PI / 2 - arcTheta,
+            dir > 0 ? Math.PI / 2 + arcTheta : -Math.PI / 2 + arcTheta
+          );
+          ctx.stroke();
+          ctx.strokeStyle = `rgba(${CREAM}, 0.14)`;
+        }
+      } else {
+        for (const left of [true, false]) {
+          const base = left ? 0 : width;
+          const dir = left ? 1 : -1;
+          ctx.strokeRect(
+            left ? base : base - paDepth,
+            cy - paWidth / 2,
+            paDepth,
+            paWidth
+          );
+          ctx.strokeRect(
+            left ? base : base - gaDepth,
+            cy - gaWidth / 2,
+            gaDepth,
+            gaWidth
+          );
+
+          // Goal is just the mouth on the end line — no third box.
+          const gx = left ? base + 2 : base - 2;
+          ctx.save();
+          ctx.strokeStyle = `rgba(${CREAM}, 0.78)`;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(gx, cy - goalWidth / 2);
+          ctx.lineTo(gx, cy + goalWidth / 2);
+          ctx.stroke();
+          ctx.fillStyle = `rgba(${CREAM}, 0.7)`;
+          for (const gy of [cy - goalWidth / 2, cy + goalWidth / 2]) {
+            ctx.beginPath();
+            ctx.arc(gx, gy, 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+
+          ctx.fillStyle = `rgba(${CREAM}, 0.30)`;
+          ctx.beginPath();
+          ctx.arc(base + dir * spotDist, cy, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = `rgba(${CREAM}, 0.12)`;
+          ctx.beginPath();
+          ctx.arc(
+            base + dir * spotDist,
+            cy,
+            arcR,
+            left ? -arcTheta : Math.PI - arcTheta,
+            left ? arcTheta : Math.PI + arcTheta
+          );
+          ctx.stroke();
+          ctx.strokeStyle = `rgba(${CREAM}, 0.14)`;
+        }
+      }
+
+      // Dashed outer ring + rotating radar arc: the "technology" layer.
+      ctx.save();
+      ctx.setLineDash([2, 7]);
+      ctx.lineDashOffset = -now * 0.02;
+      ctx.strokeStyle = `rgba(${CREAM}, 0.10)`;
+      ctx.beginPath();
+      ctx.arc(cx, cy, centerR + 12, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      const angle = (now * 0.00016) % (Math.PI * 2);
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, centerR, angle, angle + 0.55);
+      ctx.closePath();
+      ctx.fillStyle = `rgba(${BLUE}, 0.05)`;
+      ctx.fill();
+
+      ctx.strokeStyle = `rgba(${BLUE}, 0.42)`;
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = `rgba(${BLUE}, 0.55)`;
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.arc(cx, cy, centerR, angle, angle + 0.55);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.fillStyle = `rgba(${CREAM}, 0.28)`;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function update(dt, now) {
+      const time = now * 0.001;
+
+      // Ambient data-flow particles drifting across the pitch.
+      for (const f of flow) {
+        f.x += f.vx * dt * 0.06;
+        f.y += f.vy * dt * 0.06;
+        if (f.x < -20) f.x = width + 20;
+        if (f.x > width + 20) f.x = -20;
+        if (f.y < -20) f.y = height + 20;
+        if (f.y > height + 20) f.y = -20;
+      }
+
+      for (const p of players) {
+        const driftX = Math.cos(time * p.speed + p.phase) * p.amp;
+        const driftY = Math.sin(time * p.speed * 0.8 + p.phase) * p.amp;
+        let tx = p.bx + driftX;
+        let ty = p.by + driftY;
+
+        const dx = tx - mouse.x;
+        const dy = ty - mouse.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 130 && dist > 0.001) {
+          const force = (1 - dist / 130) * 16;
+          tx += (dx / dist) * force;
+          ty += (dy / dist) * force;
+        }
+
+        p.x += (tx - p.x) * 0.08;
+        p.y += (ty - p.y) * 0.08;
+      }
+
+      if (ball.hold > 0) {
+        ball.hold -= dt;
+        if (ball.hold <= 0) newPass();
+        return;
+      }
+
+      ball.elapsed += dt;
+      if (ball.elapsed >= ball.duration) {
+        ball.elapsed = ball.duration;
+        ball.hold = 380;
+        spawnPulse(players[ball.to], BLUE, 1);
+      }
+    }
+
+    function spawnPulse(player, color, strength = 1) {
+      if (!player) return;
+      pulses.push({
+        x: player.x,
+        y: player.y,
+        start: performance.now(),
+        color,
+        strength,
+      });
+    }
+
+    function newPass() {
+      spawnPulse(players[ball.from], CREAM, 0.8);
+      ball.from = ball.to;
+      let next = Math.floor(Math.random() * players.length);
+      if (next === ball.from) next = (next + 1) % players.length;
+      ball.to = next;
+      ball.elapsed = 0;
+      ball.hold = 0;
+
+      const a = players[ball.from];
+      const b = players[ball.to];
+      const dist = Math.hypot(b.x - a.x, b.y - a.y);
+      ball.duration = clamp(dist * 2.6, 480, 1500);
+    }
+
+    function ballPosition() {
+      const a = players[ball.from];
+      const b = players[ball.to];
+      if (!a || !b) return { x: width / 2, y: height / 2, t: 0 };
+
+      const t = clamp(ball.elapsed / ball.duration, 0, 1);
+      const e = easeInOut(t);
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const bend = Math.min(54, len * 0.16);
+      const cx = (a.x + b.x) / 2 - (dy / len) * bend;
+      const cy = (a.y + b.y) / 2 + (dx / len) * bend;
+
+      const mt = 1 - e;
+      return {
+        x: mt * mt * a.x + 2 * mt * e * cx + e * e * b.x,
+        y: mt * mt * a.y + 2 * mt * e * cy + e * e * b.y,
+        t,
+        a,
+        b,
+        cx,
+        cy,
+      };
+    }
+
+    function drawBall(bp) {
+      ctx.save();
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.45)';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.arc(bp.x, bp.y, 4.8, 0, Math.PI * 2);
+      ctx.fillStyle = '#f5f1eb';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(8, 10, 8, 0.7)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = `rgba(${DARK}, 0.8)`;
+      for (let i = 0; i < 3; i += 1) {
+        const angle = (i / 3) * Math.PI * 2 - Math.PI / 2;
+        ctx.beginPath();
+        ctx.arc(bp.x + Math.cos(angle) * 1.6, bp.y + Math.sin(angle) * 1.6, 0.9, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawFlow() {
+      for (const f of flow) {
+        ctx.strokeStyle = `rgba(${f.color}, 0.14)`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(f.x - f.vx * 14, f.y - f.vy * 14);
+        ctx.lineTo(f.x, f.y);
+        ctx.stroke();
+
+        ctx.fillStyle = `rgba(${f.color}, 0.34)`;
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawTrail(now) {
+      for (let i = 1; i < trail.length; i += 1) {
+        const a = trail[i - 1];
+        const b = trail[i];
+        const age = now - b.time;
+        const alpha = Math.max(0, 1 - age / 700) * 0.7;
+        if (alpha <= 0) continue;
+        ctx.strokeStyle = `rgba(${BLUE}, ${alpha})`;
+        ctx.lineWidth = 0.8 + alpha * 2.5;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+      }
+    }
+
+    function drawPulses(now) {
+      pulses = pulses.filter((p) => now - p.start < 950);
+      for (const p of pulses) {
+        const age = now - p.start;
+        const alpha = Math.max(0, 1 - age / 950) * 0.5 * p.strength;
+        const r = 9 + age * 0.07;
+        ctx.save();
+        ctx.strokeStyle = `rgba(${p.color}, ${alpha})`;
+        ctx.lineWidth = 1.4;
+        ctx.shadowColor = `rgba(${p.color}, ${alpha})`;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = `rgba(${p.color}, ${alpha * 0.45})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r + 7, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function draw(now) {
+      ctx.clearRect(0, 0, width, height);
+      drawField(now);
+      drawFlow();
+
+      const threshold = Math.max(135, Math.min(width, height) * 0.24);
+
+      for (let i = 0; i < players.length; i += 1) {
+        for (let j = i + 1; j < players.length; j += 1) {
+          const a = players[i];
+          const b = players[j];
+          if (a.team !== b.team) continue;
+          const dist = Math.hypot(a.x - b.x, a.y - b.y);
+          if (dist > threshold) continue;
+          const alpha = 0.24 * (1 - dist / threshold);
+          ctx.strokeStyle = `rgba(${TEAM_COLORS[a.team]}, ${alpha})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+
+          // A data packet moving along every other passing lane.
+          if ((i + j) % 2 === 0 && dist > 80) {
+            const t = (now * 0.00007 + i * 0.17 + j * 0.11) % 1;
+            ctx.save();
+            ctx.fillStyle = `rgba(${TEAM_COLORS[a.team]}, 0.72)`;
+            ctx.shadowColor = `rgba(${TEAM_COLORS[a.team]}, 0.55)`;
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+            ctx.arc(
+              a.x + (b.x - a.x) * t,
+              a.y + (b.y - a.y) * t,
+              1.5,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+      }
+
+      const bp = ballPosition();
+      if (ball.hold <= 0 && bp.t < 1 && bp.a && bp.b) {
+        ctx.strokeStyle = `rgba(${CREAM}, 0.16)`;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(bp.a.x, bp.a.y);
+        ctx.quadraticCurveTo(bp.cx, bp.cy, bp.b.x, bp.b.y);
+        ctx.stroke();
+
+        ctx.save();
+        ctx.strokeStyle = `rgba(${BLUE}, 0.42)`;
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 6]);
+        ctx.lineDashOffset = -now * 0.03;
+        ctx.beginPath();
+        ctx.moveTo(bp.a.x, bp.a.y);
+        ctx.quadraticCurveTo(bp.cx, bp.cy, bp.b.x, bp.b.y);
+        ctx.stroke();
+        ctx.restore();
+
+        trail.push({ x: bp.x, y: bp.y, time: now });
+        if (trail.length > 40) trail.shift();
+      }
+      trail = trail.filter((pt) => now - pt.time < 700);
+
+      drawTrail(now);
+
+      const radius = width > 760 ? 5.2 : 4.4;
+      for (const p of players) {
+        const color = TEAM_COLORS[p.team];
+        const halo = radius + 4 + Math.sin(now * 0.0018 + p.phase) * 2;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, halo, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(${color}, 0.15)`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.shadowColor = `rgba(${color}, 0.38)`;
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${color}, 0.85)`;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      drawPulses(now);
+      drawBall(bp);
+    }
+
+    function frame(now) {
+      const dt = Math.min(48, now - lastTime || 16);
+      lastTime = now;
+      update(dt, now);
+      draw(now);
+      raf = requestAnimationFrame(frame);
+    }
+
+    function start() {
+      if (raf) return;
+      lastTime = performance.now();
+      raf = requestAnimationFrame(frame);
+    }
+
+    function stop() {
+      cancelAnimationFrame(raf);
+      raf = 0;
+    }
+
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', (event) => {
+      mouse.x = event.clientX;
+      mouse.y = event.clientY;
+    });
+    window.addEventListener('mouseleave', () => {
+      mouse.x = -9999;
+      mouse.y = -9999;
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stop();
+      else if (!reducedMotion) start();
+    });
+
+    resize();
+    if (reducedMotion) draw(0);
+    else start();
+  })();
+</script>

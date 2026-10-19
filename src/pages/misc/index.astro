@@ -1,0 +1,50 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+type MiscItem = {
+  title: string;
+  date: string;
+  description: string;
+  link?: string;
+};
+
+// Small things: tools, links, half-finished ideas, experiments.
+const items: MiscItem[] = [];
+---
+
+<BaseLayout
+  title="Miscellaneous — Shawn Han"
+  description="Small things from Shawn Han: tools, notes, links, and experiments."
+>
+  <div class="mb-10">
+    <h1 class="font-serif text-4xl font-semibold tracking-tight">Miscellaneous</h1>
+    <p class="mt-2 text-soft-ink">
+      Small things that don't fit elsewhere: tools, links, and experiments.
+    </p>
+  </div>
+
+  {
+    items.length > 0 && (
+      <ul class="divide-y divide-white/10 border-t border-white/10">
+        {items.map((item) => (
+          <li class="py-7">
+            {item.link ? (
+              <a
+                href={item.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="font-serif text-xl font-medium text-ink underline decoration-white/20 underline-offset-4 transition-colors hover:text-accent"
+              >
+                {item.title}
+              </a>
+            ) : (
+              <span class="font-serif text-xl font-medium text-ink">{item.title}</span>
+            )}
+            <p class="mt-1.5 text-xs uppercase tracking-wide text-soft-ink">{item.date}</p>
+            <p class="mt-3 text-sm leading-relaxed text-soft-ink">{item.description}</p>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</BaseLayout>

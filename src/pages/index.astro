@@ -1,47 +1,86 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SocialIcons from '../components/SocialIcons.astro';
-import MosaicBackground from '../components/MosaicBackground.astro';
+import FootballBackground from '../components/FootballBackground.astro';
 ---
 
 <BaseLayout
   title="Shawn Han"
-  description="CMU stats & ML + CS student. Personal portfolio and sports analytics blog."
+  description="Shawn Han (韩德轩) — statistics, machine learning, and artificial intelligence at Carnegie Mellon University."
   hideFooter={true}
-  fullScreen={true}
-  mainClass="!py-0 flex items-center relative"
+  mainClass="relative flex flex-1 items-center justify-center px-6 py-20"
 >
-  <!-- Mosaic background: upper 50vh, full-width, z-[1], responsive grid -->
-  <div class="absolute z-[1] w-[100vw] left-1/2 -translate-x-1/2 top-0 h-[50vh] overflow-hidden">
-    <MosaicBackground />
-    <!-- bottom gradient overlay at z-[2] -->
-    <div class="absolute bottom-0 left-0 right-0 h-[50%] pointer-events-none z-[2]" style="background: linear-gradient(to bottom, transparent 0%, #faf9f7 90%);" />
-  </div>
+  <FootballBackground />
 
-  <!-- Foreground content: transparent, z-10 -->
-  <div class="relative z-10 w-full mt-40">
-    <h1 class="font-serif text-5xl md:text-6xl tracking-tight leading-tight text-white font-bold" style="text-shadow: 0 2px 12px rgba(0,0,0,0.5);">
-      ALL IN THE GAME.
-    </h1>
-    <p class="mt-56 text-lg text-soft-ink leading-relaxed max-w-lg">
-      I'm Shawn Dexuan Han, a student exploring the intersection of statistics, data science, and sports analytics.
-    </p>
-    <div class="flex gap-3 mt-8">
-      <a
-        href="/blog"
-        class="inline-flex items-center px-5 py-2.5 rounded-full bg-ink text-white text-sm font-medium hover:opacity-85 transition-opacity"
-      >
-        Blogs
-      </a>
-      <a
-        href="/projects"
-        class="inline-flex items-center px-5 py-2.5 rounded-full border border-gray-300 text-sm font-medium hover:bg-white transition-colors"
-      >
-        Projects
-      </a>
+  <div class="home-copy relative z-10 w-full max-w-2xl text-left">
+    <div class="home-glow" aria-hidden="true"></div>
+
+    <h1 class="sr-only">Shawn Han</h1>
+
+    <div class="home-intro relative z-10">
+      <p>
+        Hi, I'm Shawn Han (韩德轩), a freshman studying statistics, machine learning, and
+        artificial intelligence at Carnegie Mellon University.
+      </p>
+      <p>
+        Born and raised in Shanghai, I'm a massive sports enthusiast who loves playing
+        soccer and basketball—and nerding out over the analytics behind them. Outside of
+        sports and academics, you can find me collecting jerseys and 1:64 car models,
+        experimenting in the kitchen, diving into the humanities, or simply taking time to
+        ponder.
+      </p>
+      <p>Thank you for stopping by my little peaceful corner of the web! :]</p>
     </div>
-    <div class="mt-16 flex justify-center">
+
+    <div class="relative z-10 mt-10 flex justify-start">
       <SocialIcons layout="horizontal" />
     </div>
   </div>
 </BaseLayout>
+
+<style>
+  .home-glow {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 0;
+    width: min(56rem, 100vw);
+    height: 32rem;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(
+      closest-side,
+      rgba(14, 20, 16, 0.95),
+      rgba(14, 20, 16, 0.72) 55%,
+      rgba(14, 20, 16, 0) 100%
+    );
+    filter: blur(20px);
+    pointer-events: none;
+  }
+
+  .home-intro {
+    max-width: 42rem;
+    font-size: clamp(1.02rem, 1.6vw, 1.18rem);
+    font-weight: 500;
+    line-height: 1.9;
+    color: var(--color-ink);
+    text-wrap: pretty;
+    text-shadow: 0 2px 22px rgba(0, 0, 0, 0.75);
+  }
+
+  .home-intro p + p {
+    margin-top: 1.2em;
+  }
+
+  @media (max-width: 640px) {
+    .home-glow {
+      width: 100vw;
+      height: 26rem;
+      filter: blur(14px);
+    }
+
+    .home-intro {
+      font-size: 1rem;
+      line-height: 1.85;
+    }
+  }
+</style>
